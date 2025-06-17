@@ -5,7 +5,8 @@ import { useChatStore } from '../store/chatStore';
 import QueueScreen from './QueueScreen';
 import ChatWindow from './ChatWindow';
 import ChatSidebar from './ChatSidebar';
-import { LogOut, MessageCircle, Headphones } from 'lucide-react';
+import AdminSelection from './AdminSelection';
+import { LogOut, MessageCircle, Headphones, Users } from 'lucide-react';
 
 const FacultyDashboard: React.FC = () => {
   const {
@@ -13,14 +14,20 @@ const FacultyDashboard: React.FC = () => {
     chats,
     activeChat,
     isInQueue,
+    showAdminSelection,
     startQueue,
     sendMessage,
     logout,
+    setShowAdminSelection,
   } = useChatStore();
 
   if (!currentUser) return null;
 
   const handleStartChat = () => {
+    setShowAdminSelection(true);
+  };
+
+  const handleQuickStart = () => {
     startQueue();
   };
 
@@ -30,6 +37,10 @@ const FacultyDashboard: React.FC = () => {
 
   if (isInQueue) {
     return <QueueScreen onComplete={handleQueueComplete} />;
+  }
+
+  if (showAdminSelection) {
+    return <AdminSelection />;
   }
 
   if (!activeChat) {
@@ -56,8 +67,17 @@ const FacultyDashboard: React.FC = () => {
               size="lg" 
               className="w-full max-w-sm h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all duration-200"
             >
+              <Users className="h-5 w-5 mr-2" />
+              Choose Admin
+            </Button>
+            <Button 
+              onClick={handleQuickStart} 
+              variant="outline"
+              size="lg" 
+              className="w-full max-w-sm h-12 text-base border-blue-300 hover:bg-blue-50 text-blue-700"
+            >
               <MessageCircle className="h-5 w-5 mr-2" />
-              Start New Support Chat
+              Quick Start (Auto-Assign)
             </Button>
             <Button 
               variant="outline" 
@@ -68,6 +88,14 @@ const FacultyDashboard: React.FC = () => {
               Sign Out
             </Button>
           </div>
+
+          {/* Show chat history if exists */}
+          {chats.length > 0 && (
+            <div className="mt-8 p-4 bg-white/60 backdrop-blur-sm rounded-xl border border-white/20">
+              <h3 className="text-sm font-medium text-gray-700 mb-2">Previous Conversations</h3>
+              <p className="text-xs text-gray-500">{chats.length} chat{chats.length !== 1 ? 's' : ''} in history</p>
+            </div>
+          )}
         </div>
       </div>
     );

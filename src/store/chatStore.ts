@@ -2,25 +2,32 @@
 import { create } from 'zustand';
 import { User, Chat, Message, ChatState } from '../types/chat';
 
-// Mock admin data for round-robin assignment
+// Mock admin data with availability status
 const mockAdmins: User[] = [
   { id: 'admin1', name: 'Dr. Smith', role: 'admin', isOnline: true },
   { id: 'admin2', name: 'Prof. Johnson', role: 'admin', isOnline: true },
-  { id: 'admin3', name: 'Ms. Williams', role: 'admin', isOnline: true },
+  { id: 'admin3', name: 'Ms. Williams', role: 'admin', isOnline: false },
+  { id: 'admin4', name: 'Dr. Brown', role: 'admin', isOnline: true },
 ];
 
 let adminRoundRobinIndex = 0;
 
 interface ChatStore extends ChatState {
+  availableAdmins: User[];
+  showAdminSelection: boolean;
   login: (name: string, role: 'faculty' | 'admin') => void;
   logout: () => void;
   startQueue: () => void;
+  selectAdmin: (adminId: string) => void;
   assignAdmin: () => void;
   sendMessage: (content: string) => void;
   closeChat: (chatId: string) => void;
   setActiveChat: (chat: Chat | null) => void;
   setTyping: (isTyping: boolean) => void;
   simulateAdminResponse: () => void;
+  setShowAdminSelection: (show: boolean) => void;
+  getAvailableAdmins: () => User[];
+  getAllChatsForFaculty: (facultyId: string) => Chat[];
 }
 
 export const useChatStore = create<ChatStore>((set, get) => ({
@@ -30,6 +37,8 @@ export const useChatStore = create<ChatStore>((set, get) => ({
   isTyping: false,
   queuePosition: 1,
   isInQueue: false,
+  availableAdmins: mockAdmins.filter(admin => admin.isOnline),
+  showAdminSelection: false,
 
   login: (name: string, role: 'faculty' | 'admin') => {
     const user: User = {
@@ -38,7 +47,66 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       role,
       isOnline: true,
     };
-    set({ currentUser: user });
+    
+    // Generate some mock chat history for faculty users
+    if (role === 'faculty') {
+      const mockChats: Chat[] = [
+        {
+          id: 'chat_1',
+          facultyId: user.id,
+          facultyName: user.name,
+          adminId: 'admin1',
+          adminName: 'Dr. Smith',
+          status: 'closed',
+          messages: [
+            {
+              id: 'msg_1',
+              chatId: 'chat_1',
+              senderId: 'admin1',
+              senderName: 'Dr. Smith',
+              content: 'Hello! How can I help you today?',
+              timestamp: new Date(Date.now() - 86400000 * 3), // 3 days ago
+              type: 'text',
+            },
+            {
+              id: 'msg_2',
+              chatId: 'chat_1',
+              senderId: user.id,
+              senderName: user.name,
+              content: 'I need help with password reset.',
+              timestamp: new Date(Date.now() - 86400000 * 3),
+              type: 'text',
+            },
+          ],
+          createdAt: new Date(Date.now() - 86400000 * 3),
+          closedAt: new Date(Date.now() - 86400000 * 3 + 3600000),
+        },
+        {
+          id: 'chat_2',
+          facultyId: user.id,
+          facultyName: user.name,
+          adminId: 'admin2',
+          adminName: 'Prof. Johnson',
+          status: 'closed',
+          messages: [
+            {
+              id: 'msg_3',
+              chatId: 'chat_2',
+              senderId: 'admin2',
+              senderName: 'Prof. Johnson',
+              content: 'Hi there! What can I assist you with?',
+              timestamp: new Date(Date.now() - 86400000 * 7), // 7 days ago
+              type: 'text',
+            },
+          ],
+          createdAt: new Date(Date.now() - 86400000 * 7),
+          closedAt: new Date(Date.now() - 86400000 * 7 + 1800000),
+        },
+      ];
+      set({ currentUser: user, chats: mockChats });
+    } else {
+      set({ currentUser: user });
+    }
   },
 
   logout: () => {
@@ -48,6 +116,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       activeChat: null,
       isTyping: false,
       isInQueue: false,
+      showAdminSelection: false,
     });
   },
 
@@ -59,13 +128,52 @@ export const useChatStore = create<ChatStore>((set, get) => ({
     }, 5000);
   },
 
+  selectAdmin: (adminId: string) => {
+    const { currentUser, chats } = get();
+    if (!currentUser || currentUser.role !== 'faculty') return;
+
+    const selectedAdmin = mockAdmins.find(admin => admin.id === adminId);
+    if (!selectedAdmin || !selectedAdmin.isOnline) return;
+
+    const newChat: Chat = {
+      id: `chat_${Date.now()}`,
+      facultyId: currentUser.id,
+      facultyName: currentUser.name,
+      adminId: selectedAdmin.id,
+      adminName: selectedAdmin.name,
+      status: 'active',
+      messages: [
+        {
+          id: `msg_${Date.now()}`,
+          chatId: `chat_${Date.now()}`,
+          senderId: selectedAdmin.id,
+          senderName: selectedAdmin.name,
+          content: `Hello ${currentUser.name}! I'm ${selectedAdmin.name}. How can I help you today?`,
+          timestamp: new Date(),
+          type: 'text',
+        },
+      ],
+      createdAt: new Date(),
+    };
+
+    set({
+      chats: [...chats, newChat],
+      activeChat: newChat,
+      isInQueue: false,
+      showAdminSelection: false,
+    });
+  },
+
   assignAdmin: () => {
     const { currentUser, chats } = get();
     if (!currentUser || currentUser.role !== 'faculty') return;
 
-    // Round-robin admin selection
-    const assignedAdmin = mockAdmins[adminRoundRobinIndex];
-    adminRoundRobinIndex = (adminRoundRobinIndex + 1) % mockAdmins.length;
+    // Round-robin admin selection from available admins
+    const availableAdmins = mockAdmins.filter(admin => admin.isOnline);
+    if (availableAdmins.length === 0) return;
+
+    const assignedAdmin = availableAdmins[adminRoundRobinIndex % availableAdmins.length];
+    adminRoundRobinIndex = (adminRoundRobinIndex + 1) % availableAdmins.length;
 
     const newChat: Chat = {
       id: `chat_${Date.now()}`,
@@ -93,6 +201,19 @@ export const useChatStore = create<ChatStore>((set, get) => ({
       activeChat: newChat,
       isInQueue: false,
     });
+  },
+
+  setShowAdminSelection: (show: boolean) => {
+    set({ showAdminSelection: show });
+  },
+
+  getAvailableAdmins: () => {
+    return mockAdmins.filter(admin => admin.isOnline);
+  },
+
+  getAllChatsForFaculty: (facultyId: string) => {
+    const { chats } = get();
+    return chats.filter(chat => chat.facultyId === facultyId);
   },
 
   sendMessage: (content: string) => {

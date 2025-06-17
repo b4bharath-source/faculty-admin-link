@@ -3,8 +3,10 @@ import React from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 import { Chat } from '../types/chat';
-import { MessageCircle, Clock, CheckCircle, HelpCircle, Archive } from 'lucide-react';
+import { useChatStore } from '../store/chatStore';
+import { MessageCircle, Clock, CheckCircle, HelpCircle, Archive, Eye } from 'lucide-react';
 
 interface ChatSidebarProps {
   chats: Chat[];
@@ -13,11 +15,15 @@ interface ChatSidebarProps {
 }
 
 const ChatSidebar: React.FC<ChatSidebarProps> = ({ chats, currentUserId, role }) => {
+  const { setActiveChat } = useChatStore();
+
   const formatDate = (date: Date) => {
     return new Intl.DateTimeFormat('en-US', {
       month: 'short',
       day: 'numeric',
       year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
     }).format(date);
   };
 
@@ -46,6 +52,20 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ chats, currentUserId, role })
         return <Badge variant="outline" className="text-xs">Unknown</Badge>;
     }
   };
+
+  const handleViewChat = (chat: Chat) => {
+    // For faculty, allow viewing past chats in read-only mode
+    if (role === 'faculty' && chat.status === 'closed') {
+      // Create a read-only version of the chat
+      const readOnlyChat = { ...chat, status: 'closed' as const };
+      setActiveChat(readOnlyChat);
+    } else if (chat.status === 'active') {
+      setActiveChat(chat);
+    }
+  };
+
+  const activeCats = chats.filter(chat => chat.status === 'active');
+  const closedChats = chats.filter(chat => chat.status === 'closed');
 
   const faqItems = [
     {
@@ -108,43 +128,94 @@ const ChatSidebar: React.FC<ChatSidebarProps> = ({ chats, currentUserId, role })
             <span>Chat History</span>
           </CardTitle>
         </CardHeader>
-        <CardContent className="pt-0 space-y-3 overflow-y-auto max-h-96">
-          {chats.length === 0 ? (
+        <CardContent className="pt-0 space-y-4 overflow-y-auto max-h-96">
+          {/* Active Chats */}
+          {activeCats.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Active Chats</h4>
+              <div className="space-y-2">
+                {activeCats.map((chat) => (
+                  <div key={chat.id} className="p-3 bg-green-50 rounded-xl border border-green-100 hover:shadow-sm transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(chat.status)}
+                        <span className="text-sm font-medium text-gray-800 truncate">
+                          {role === 'admin' ? chat.facultyName : chat.adminName || 'Support Admin'}
+                        </span>
+                      </div>
+                      {getStatusBadge(chat.status)}
+                    </div>
+                    <div className="text-xs text-gray-600 space-y-1 leading-relaxed">
+                      <div className="flex justify-between">
+                        <span className="font-medium">Started:</span>
+                        <span>{formatDate(chat.createdAt)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="font-medium">Messages:</span>
+                        <span>{chat.messages.length}</span>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* Past Chats */}
+          {closedChats.length > 0 && (
+            <div>
+              <h4 className="text-xs font-semibold text-gray-600 mb-2 uppercase tracking-wide">Past Conversations</h4>
+              <div className="space-y-2">
+                {closedChats.map((chat) => (
+                  <div key={chat.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2">
+                        {getStatusIcon(chat.status)}
+                        <span className="text-sm font-medium text-gray-800 truncate">
+                          {role === 'admin' ? chat.facultyName : chat.adminName || 'Support Admin'}
+                        </span>
+                      </div>
+                      {getStatusBadge(chat.status)}
+                    </div>
+                    <div className="text-xs text-gray-600 space-y-1 leading-relaxed mb-3">
+                      <div className="flex justify-between">
+                        <span className="font-medium">Started:</span>
+                        <span>{formatDate(chat.createdAt)}</span>
+                      </div>
+                      {chat.closedAt && (
+                        <div className="flex justify-between">
+                          <span className="font-medium">Closed:</span>
+                          <span>{formatDate(chat.closedAt)}</span>
+                        </div>
+                      )}
+                      <div className="flex justify-between">
+                        <span className="font-medium">Messages:</span>
+                        <span>{chat.messages.length}</span>
+                      </div>
+                    </div>
+                    {role === 'faculty' && (
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full text-xs h-7 hover:bg-blue-50 hover:border-blue-300"
+                        onClick={() => handleViewChat(chat)}
+                      >
+                        <Eye className="h-3 w-3 mr-1" />
+                        View Chat
+                      </Button>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {chats.length === 0 && (
             <div className="text-center py-8">
               <MessageCircle className="h-8 w-8 text-gray-300 mx-auto mb-2" />
               <p className="text-sm text-gray-500">No previous chats</p>
               <p className="text-xs text-gray-400 mt-1">Your chat history will appear here</p>
             </div>
-          ) : (
-            chats.map((chat) => (
-              <div key={chat.id} className="p-3 bg-gray-50 rounded-xl border border-gray-100 hover:shadow-sm transition-shadow">
-                <div className="flex items-center justify-between mb-3">
-                  <div className="flex items-center space-x-2">
-                    {getStatusIcon(chat.status)}
-                    <span className="text-sm font-medium text-gray-800 truncate">
-                      {role === 'admin' ? chat.facultyName : chat.adminName || 'Support Admin'}
-                    </span>
-                  </div>
-                  {getStatusBadge(chat.status)}
-                </div>
-                <div className="text-xs text-gray-600 space-y-1 leading-relaxed">
-                  <div className="flex justify-between">
-                    <span className="font-medium">Started:</span>
-                    <span>{formatDate(chat.createdAt)}</span>
-                  </div>
-                  {chat.closedAt && (
-                    <div className="flex justify-between">
-                      <span className="font-medium">Closed:</span>
-                      <span>{formatDate(chat.closedAt)}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="font-medium">Messages:</span>
-                    <span>{chat.messages.length}</span>
-                  </div>
-                </div>
-              </div>
-            ))
           )}
         </CardContent>
       </Card>

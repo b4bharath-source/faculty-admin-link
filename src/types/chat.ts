@@ -36,4 +36,6 @@ export interface ChatState {
   isTyping: boolean;
   queuePosition: number;
   isInQueue: boolean;
+  availableAdmins: User[];
+  showAdminSelection: boolean;
 }
