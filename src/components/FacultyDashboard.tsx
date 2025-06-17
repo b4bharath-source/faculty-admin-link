@@ -5,7 +5,7 @@ import { useChatStore } from '../store/chatStore';
 import QueueScreen from './QueueScreen';
 import ChatWindow from './ChatWindow';
 import ChatSidebar from './ChatSidebar';
-import { LogOut } from 'lucide-react';
+import { LogOut, MessageCircle, Headphones } from 'lucide-react';
 
 const FacultyDashboard: React.FC = () => {
   const {
@@ -34,23 +34,38 @@ const FacultyDashboard: React.FC = () => {
 
   if (!activeChat) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center space-y-6">
-          <div className="space-y-2">
-            <h1 className="text-2xl font-bold text-gray-900">
-              Welcome, {currentUser.name}
-            </h1>
-            <p className="text-gray-600">
-              Ready to connect with an administrator?
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex items-center justify-center p-4 sm:p-6">
+        <div className="text-center space-y-8 max-w-md w-full">
+          <div className="space-y-4">
+            <div className="mx-auto w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-2xl flex items-center justify-center shadow-lg">
+              <Headphones className="h-10 w-10 text-white" />
+            </div>
+            <div className="space-y-2">
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
+                Welcome, {currentUser.name}
+              </h1>
+              <p className="text-gray-600 text-base sm:text-lg">
+                Ready to connect with our support team?
+              </p>
+            </div>
           </div>
-          <div className="space-y-3">
-            <Button onClick={handleStartChat} size="lg" className="w-full max-w-sm">
-              Start New Chat
+          
+          <div className="space-y-4">
+            <Button 
+              onClick={handleStartChat} 
+              size="lg" 
+              className="w-full max-w-sm h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 shadow-lg transition-all duration-200"
+            >
+              <MessageCircle className="h-5 w-5 mr-2" />
+              Start New Support Chat
             </Button>
-            <Button variant="outline" onClick={logout} className="w-full max-w-sm">
+            <Button 
+              variant="outline" 
+              onClick={logout} 
+              className="w-full max-w-sm h-12 text-base border-gray-300 hover:bg-gray-50"
+            >
               <LogOut className="h-4 w-4 mr-2" />
-              Logout
+              Sign Out
             </Button>
           </div>
         </div>
@@ -59,38 +74,45 @@ const FacultyDashboard: React.FC = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
+    <div className="min-h-screen bg-gray-50 flex flex-col lg:flex-row">
       {/* Main Chat Area */}
-      <div className="flex-1 flex flex-col">
-        {/* Header */}
-        <div className="bg-white border-b border-gray-200 px-6 py-4 flex items-center justify-between">
-          <h1 className="text-xl font-semibold text-gray-900">
-            Faculty Support Chat
-          </h1>
-          <Button variant="outline" onClick={logout} size="sm">
+      <div className="flex-1 flex flex-col min-h-0">
+        {/* Header - Hidden on mobile when chat is active, visible on desktop */}
+        <div className="hidden lg:flex bg-white border-b border-gray-200 px-4 sm:px-6 py-4 items-center justify-between shadow-sm">
+          <div className="flex items-center space-x-3">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <MessageCircle className="h-4 w-4 text-blue-600" />
+            </div>
+            <h1 className="text-lg sm:text-xl font-semibold text-gray-900">
+              Faculty Support
+            </h1>
+          </div>
+          <Button variant="outline" onClick={logout} size="sm" className="hover:bg-gray-50">
             <LogOut className="h-4 w-4 mr-2" />
-            Logout
+            Sign Out
           </Button>
         </div>
 
         {/* Chat Window */}
-        <div className="flex-1">
+        <div className="flex-1 min-h-0">
           <ChatWindow
             messages={activeChat.messages}
             currentUserId={currentUser.id}
-            recipientName={activeChat.adminName || 'Admin'}
+            recipientName={activeChat.adminName || 'Support Admin'}
             isTyping={false}
             onSendMessage={sendMessage}
           />
         </div>
       </div>
 
-      {/* Sidebar */}
-      <ChatSidebar
-        chats={chats}
-        currentUserId={currentUser.id}
-        role="faculty"
-      />
+      {/* Sidebar - Hidden on mobile, visible on tablet+ */}
+      <div className="hidden lg:block">
+        <ChatSidebar
+          chats={chats}
+          currentUserId={currentUser.id}
+          role="faculty"
+        />
+      </div>
     </div>
   );
 };

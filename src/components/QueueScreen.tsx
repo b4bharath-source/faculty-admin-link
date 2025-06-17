@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Clock, MessageCircle, HelpCircle } from 'lucide-react';
+import { Clock, MessageCircle, HelpCircle, Loader2 } from 'lucide-react';
 
 interface QueueScreenProps {
   onComplete: () => void;
@@ -36,7 +36,7 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onComplete }) => {
   const faqItems = [
     {
       question: "How do I reset my password?",
-      answer: "You can reset your password by clicking the 'Forgot Password' link on the login page and following the instructions sent to your email."
+      answer: "Click the 'Forgot Password' link on the login page and follow the instructions sent to your email."
     },
     {
       question: "How do I upload documents?",
@@ -44,63 +44,79 @@ const QueueScreen: React.FC<QueueScreenProps> = ({ onComplete }) => {
     },
     {
       question: "Where can I view my schedule?",
-      answer: "Your teaching schedule is available in the 'My Schedule' section of your faculty portal. You can also sync it with your calendar app."
+      answer: "Your teaching schedule is available in the 'My Schedule' section of your faculty portal."
     },
     {
       question: "How do I request time off?",
-      answer: "Submit time-off requests through the HR portal. Make sure to submit requests at least 2 weeks in advance for approval."
+      answer: "Submit time-off requests through the HR portal. Submit requests at least 2 weeks in advance."
     },
     {
-      question: "Who do I contact for technical issues?",
-      answer: "For technical support, you can either use this chat system or email support@university.edu. Response time is typically within 24 hours."
+      question: "Technical support contact?",
+      answer: "Use this chat system or email support@university.edu. Response time is typically within 24 hours."
     }
   ];
 
   return (
-    <div className="min-h-screen bg-gray-50 flex">
-      {/* Left side - Queue status */}
-      <div className="flex-1 flex items-center justify-center p-8">
-        <Card className="w-full max-w-lg">
-          <CardHeader className="text-center">
-            <div className="mx-auto mb-4 w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center">
-              <MessageCircle className="h-8 w-8 text-blue-600 animate-pulse" />
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 flex flex-col lg:flex-row">
+      {/* Main Queue Status - Full width on mobile, left side on desktop */}
+      <div className="flex-1 flex items-center justify-center p-4 sm:p-6 lg:p-8">
+        <Card className="w-full max-w-lg shadow-xl border-0 bg-white/90 backdrop-blur-sm">
+          <CardHeader className="text-center pb-6">
+            <div className="mx-auto mb-6 w-20 h-20 bg-gradient-to-r from-blue-500 to-indigo-600 rounded-full flex items-center justify-center shadow-lg">
+              <Loader2 className="h-10 w-10 text-white animate-spin" />
             </div>
-            <CardTitle className="text-2xl font-semibold text-gray-900">
-              Connecting you to an admin{dots}
+            <CardTitle className="text-2xl sm:text-3xl font-bold text-gray-900 mb-2">
+              Connecting you to support{dots}
             </CardTitle>
-          </CardHeader>
-          <CardContent className="text-center space-y-4">
-            <p className="text-gray-600">
-              Please wait while we connect you to an available administrator.
+            <p className="text-gray-600 text-base sm:text-lg">
+              Please wait while we connect you to an available administrator
             </p>
-            <div className="flex items-center justify-center space-x-2 text-sm text-gray-500">
-              <Clock className="h-4 w-4" />
-              <span>Estimated wait time: {countdown} seconds</span>
+          </CardHeader>
+          <CardContent className="space-y-6">
+            <div className="bg-blue-50 rounded-xl p-4 border border-blue-100">
+              <div className="flex items-center justify-center space-x-3 text-blue-700 mb-3">
+                <Clock className="h-5 w-5" />
+                <span className="text-sm font-medium">Estimated wait time: {countdown} seconds</span>
+              </div>
+              <div className="w-full bg-blue-200 rounded-full h-3 overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 to-indigo-600 h-3 rounded-full transition-all duration-1000 ease-out"
+                  style={{ width: `${((5 - countdown) / 5) * 100}%` }}
+                />
+              </div>
             </div>
-            <div className="w-full bg-gray-200 rounded-full h-2">
-              <div 
-                className="bg-blue-600 h-2 rounded-full transition-all duration-1000"
-                style={{ width: `${((5 - countdown) / 5) * 100}%` }}
-              />
+            <div className="text-center">
+              <p className="text-sm text-gray-500">
+                Average response time is under 30 seconds
+              </p>
             </div>
           </CardContent>
         </Card>
       </div>
 
-      {/* Right side - FAQ */}
-      <div className="w-96 bg-white border-l border-gray-200 p-6">
-        <div className="flex items-center space-x-2 mb-6">
-          <HelpCircle className="h-5 w-5 text-blue-600" />
-          <h2 className="text-lg font-semibold text-gray-900">Frequently Asked Questions</h2>
+      {/* FAQ Section - Full width on mobile, right side on desktop */}
+      <div className="w-full lg:w-96 xl:w-[420px] bg-white border-t lg:border-t-0 lg:border-l border-gray-200 p-4 sm:p-6 overflow-y-auto">
+        <div className="sticky top-0 bg-white pb-4 mb-4 border-b border-gray-100">
+          <div className="flex items-center space-x-3 mb-2">
+            <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+              <HelpCircle className="h-4 w-4 text-blue-600" />
+            </div>
+            <h2 className="text-lg font-semibold text-gray-900">Quick Help</h2>
+          </div>
+          <p className="text-sm text-gray-600">Find answers while you wait</p>
         </div>
         
-        <Accordion type="single" collapsible className="space-y-2">
+        <Accordion type="single" collapsible className="space-y-3">
           {faqItems.map((item, index) => (
-            <AccordionItem key={index} value={`item-${index}`} className="border border-gray-200 rounded-lg px-4">
-              <AccordionTrigger className="text-left text-sm font-medium text-gray-700">
+            <AccordionItem 
+              key={index} 
+              value={`item-${index}`} 
+              className="border border-gray-200 rounded-xl px-4 hover:shadow-md transition-shadow duration-200"
+            >
+              <AccordionTrigger className="text-left text-sm font-medium text-gray-800 hover:text-blue-600 py-4">
                 {item.question}
               </AccordionTrigger>
-              <AccordionContent className="text-sm text-gray-600 pt-2">
+              <AccordionContent className="text-sm text-gray-600 pb-4 leading-relaxed">
                 {item.answer}
               </AccordionContent>
             </AccordionItem>
