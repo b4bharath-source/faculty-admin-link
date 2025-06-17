@@ -77,6 +77,15 @@ export const useChatStore = create<ChatStore>((set, get) => ({
               timestamp: new Date(Date.now() - 86400000 * 3),
               type: 'text',
             },
+            {
+              id: 'msg_3',
+              chatId: 'chat_1',
+              senderId: 'admin1',
+              senderName: 'Dr. Smith',
+              content: 'Sure! I can help you with that. Let me guide you through the process.',
+              timestamp: new Date(Date.now() - 86400000 * 3 + 120000),
+              type: 'text',
+            },
           ],
           createdAt: new Date(Date.now() - 86400000 * 3),
           closedAt: new Date(Date.now() - 86400000 * 3 + 3600000),
@@ -90,7 +99,7 @@ export const useChatStore = create<ChatStore>((set, get) => ({
           status: 'closed',
           messages: [
             {
-              id: 'msg_3',
+              id: 'msg_4',
               chatId: 'chat_2',
               senderId: 'admin2',
               senderName: 'Prof. Johnson',
@@ -98,9 +107,48 @@ export const useChatStore = create<ChatStore>((set, get) => ({
               timestamp: new Date(Date.now() - 86400000 * 7), // 7 days ago
               type: 'text',
             },
+            {
+              id: 'msg_5',
+              chatId: 'chat_2',
+              senderId: user.id,
+              senderName: user.name,
+              content: 'I have questions about the new grading system.',
+              timestamp: new Date(Date.now() - 86400000 * 7 + 60000),
+              type: 'text',
+            },
           ],
           createdAt: new Date(Date.now() - 86400000 * 7),
           closedAt: new Date(Date.now() - 86400000 * 7 + 1800000),
+        },
+        {
+          id: 'chat_3',
+          facultyId: user.id,
+          facultyName: user.name,
+          adminId: 'admin4',
+          adminName: 'Dr. Brown',
+          status: 'closed',
+          messages: [
+            {
+              id: 'msg_6',
+              chatId: 'chat_3',
+              senderId: 'admin4',
+              senderName: 'Dr. Brown',
+              content: 'Hello! How can I help you today?',
+              timestamp: new Date(Date.now() - 86400000 * 1), // 1 day ago
+              type: 'text',
+            },
+            {
+              id: 'msg_7',
+              chatId: 'chat_3',
+              senderId: user.id,
+              senderName: user.name,
+              content: 'I need access to the faculty portal.',
+              timestamp: new Date(Date.now() - 86400000 * 1 + 30000),
+              type: 'text',
+            },
+          ],
+          createdAt: new Date(Date.now() - 86400000 * 1),
+          closedAt: new Date(Date.now() - 86400000 * 1 + 900000),
         },
       ];
       set({ currentUser: user, chats: mockChats });
